@@ -6,17 +6,9 @@ import ArrowUpRight from "lucide-react-native/icons/arrow-up-right";
 import Compass from "lucide-react-native/icons/compass";
 import Sparkles from "lucide-react-native/icons/sparkles";
 import Trophy from "lucide-react-native/icons/trophy";
-import {
-  Button,
-  Card,
-  Label,
-  MatchCard,
-  SportSelector,
-  Title,
-  s,
-} from "../components/ui";
+import { Button, Card, Label, SportSelector, Title, s } from "../components/ui";
 import { colors as c, fonts } from "../theme";
-import { fixtures } from "../data/demo";
+import { FootballFixtures } from "../features/sports/football-screen";
 import { supabase } from "../lib/supabase";
 import { useCurrentProfile } from "../features/account/session";
 export default function Home() {
@@ -25,7 +17,7 @@ export default function Home() {
   return (
     <View>
       <Title subtitle="A new day. A new game. Make it yours.">
-        {`Your arena, ${supabase ? profile?.display_name.split(" ")[0] || "sports fan" : "Alex"}.`}
+        {`Your arena, ${supabase ? profile?.display_name.split(" ")[0] || "sports fan" : "sports fan"}.`}
       </Title>
       <Card
         style={{
@@ -118,26 +110,17 @@ export default function Home() {
       >
         Around the grounds
       </Title>
-      <Label muted style={{ fontSize: 11, marginTop: -13, marginBottom: 17 }}>
-        Sample fixtures · No live sports provider connected
-      </Label>
-      <View style={{ gap: 13 }}>
-        {fixtures
-          .filter((f) => f.sport === sport)
-          .slice(0, 2)
-          .map((f) => (
-            <MatchCard key={f.id} match={f} />
-          ))}
-        {!fixtures.some((f) => f.sport === sport) && (
-          <Card>
-            <Label>More sports, same love for the game.</Label>
-            <Label muted style={{ marginTop: 7 }}>
-              Fixtures for {sport.toLowerCase()} will appear when a provider is
-              connected.
-            </Label>
-          </Card>
-        )}
-      </View>
+      {sport === "Football" ? (
+        <FootballFixtures compact />
+      ) : (
+        <Card>
+          <Label>{sport} coverage is not connected.</Label>
+          <Label muted style={{ marginTop: 8, fontSize: 12 }}>
+            Real results will appear when an adapter for this sport is
+            connected.
+          </Label>
+        </Card>
+      )}
       <View style={{ marginTop: 30 }}>
         <Title compact>Make your next move</Title>
         <View style={{ gap: 12 }}>

@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { resolve, extname, sep } from "node:path";
+import { sportsHandler } from "../server/sports-runtime.mjs";
 
 const root = resolve("dist");
 const types = {
@@ -14,6 +15,11 @@ const types = {
   ".ttf": "font/ttf",
 };
 createServer(async (req, res) => {
+  const url = new URL(req.url, "http://localhost");
+  if (url.pathname.startsWith("/api/sports/")) {
+    await sportsHandler(req, res);
+    return;
+  }
   try {
     const pathname = decodeURIComponent(
       new URL(req.url, "http://localhost").pathname,
@@ -34,6 +40,11 @@ createServer(async (req, res) => {
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.end("Not found. Run npm run build:web before starting this preview.");
   }
-}).listen(8081, "127.0.0.1", () =>
-  console.log("Sport Coins preview: http://localhost:8081/community"),
+}).listen(
+  Number(process.env.PORT) || 8081,
+  process.env.HOST || "127.0.0.1",
+  () =>
+    console.log(
+      "Sport Coins preview and sports backend: http://localhost:8081/live",
+    ),
 );

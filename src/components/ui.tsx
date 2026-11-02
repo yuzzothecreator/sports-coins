@@ -379,12 +379,24 @@ export function SportSelector({
     </ScrollView>
   );
 }
-export function MatchCard({ match }: { match: Fixture }) {
+export function MatchCard({
+  match,
+  navigable = true,
+}: {
+  match: Fixture;
+  navigable?: boolean;
+}) {
+  const real = match.source === "api-football";
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${match.home} versus ${match.away}, ${match.status}, ${match.score}, demo fixture`}
-      onPress={() => router.push(`/match/${match.id}`)}
+      accessibilityLabel={`${match.home} versus ${match.away}, ${match.status}, ${match.score}, ${real ? "API-Football data" : "demo fixture"}`}
+      disabled={!navigable}
+      onPress={() =>
+        real
+          ? router.push({ pathname: "/live", params: { fixture: match.id } })
+          : router.push(`/match/${match.id}`)
+      }
     >
       <Card>
         <View style={[s.row, { justifyContent: "space-between" }]}>
@@ -393,9 +405,10 @@ export function MatchCard({ match }: { match: Fixture }) {
           </Label>
           <Badge
             tone={
-              match.status === "Upcoming"
+              match.phase === "scheduled" || match.status === "Upcoming"
                 ? "gold"
-                : match.status === "FT"
+                : (real && !["live", "paused"].includes(match.phase || "")) ||
+                    match.status === "FT"
                   ? "neutral"
                   : "green"
             }
@@ -432,7 +445,7 @@ export function MatchCard({ match }: { match: Fixture }) {
               {match.score}
             </Text>
             <Label muted style={{ fontSize: 9, marginTop: 4 }}>
-              DEMO FIXTURE
+              {real ? "API-FOOTBALL" : "DEMO FIXTURE"}
             </Label>
           </View>
           <View style={{ alignItems: "center", width: 90 }}>
@@ -461,7 +474,9 @@ export function MatchCard({ match }: { match: Fixture }) {
           }}
         >
           <Label muted style={{ fontSize: 10 }}>
-            {match.time}
+            {real && match.kickoff
+              ? new Date(match.kickoff).toLocaleString()
+              : match.time}
           </Label>
           <View style={s.row}>
             <Label style={{ fontSize: 10, fontWeight: "600" }}>

@@ -1,214 +1,107 @@
-import { AppText as Text } from "../components/typography";
-import { useState } from "react";
-import { View, Pressable, Share } from "react-native";
-import * as Clipboard from "expo-clipboard";
-import Check from "lucide-react-native/icons/check";
-import Plus from "lucide-react-native/icons/plus";
-import Sparkles from "lucide-react-native/icons/sparkles";
+import { useEffect, useState } from "react";
+import { View } from "react-native";
 import { Button, Card, Crest, Label, Title, s } from "../components/ui";
-import { useApp } from "../store/use-app";
-import { colors as c } from "../theme";
-const selections = [
-  {
-    id: "liv-home",
-    home: "Liverpool",
-    away: "Man City",
-    code: "LIV",
-    color: "#BE394A",
-    selection: "Liverpool to win",
-    market: "Match result",
-    probability: 44,
-  },
-  {
-    id: "liv-goals",
-    home: "Liverpool",
-    away: "Man City",
-    code: "MCI",
-    color: "#749CB9",
-    selection: "Over 2.5 goals",
-    market: "Total goals",
-    probability: 62,
-  },
-  {
-    id: "tennis",
-    home: "J. Sinner",
-    away: "C. Alcaraz",
-    code: "ATP",
-    color: "#809653",
-    selection: "Over 3.5 sets",
-    market: "Total sets",
-    probability: 57,
-  },
-];
+import { FootballStatus } from "../features/sports/football-screen";
+import { useFootballFeed } from "../services/football";
+
+type Outcome = "home" | "draw" | "away";
 export default function Predictions() {
-  const picks = useApp((s) => s.picks);
-  const toggle = useApp((s) => s.toggle);
-  const [code, setCode] = useState("");
-  const [copied, setCopied] = useState(false);
-  const selected = selections.filter((s) => picks.includes(s.id));
+  const feed = useFootballFeed();
+  const [picks, setPicks] = useState<Record<string, Outcome>>({});
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 15_000);
+    return () => clearInterval(timer);
+  }, []);
+  const fixtures = (feed.data?.fixtures || []).filter(
+    (match) => match.phase === "scheduled" && Date.parse(match.kickoff) > now,
+  );
+  const selected = fixtures.filter((match) => picks[match.id]);
+  const unavailable = !!feed.error || !!feed.data?.stale;
+  const outcomeLabel = (home: string, away: string, outcome: Outcome) =>
+    outcome === "draw" ? "Draw" : `${outcome === "home" ? home : away} to win`;
   return (
     <View>
-      <Title subtitle="A little research. A lot of sporting instinct.">
-        Your next prediction
-      </Title>
-      <Card
-        style={{ backgroundColor: "#F6F5FA", borderWidth: 0, marginBottom: 25 }}
-      >
-        <View style={s.row}>
-          <Sparkles size={19} color={c.ink} />
-          <Label style={{ fontWeight: "500" }}>
-            See the thinking behind the pick.
-          </Label>
-        </View>
-        <Label muted style={{ fontSize: 12, marginTop: 10 }}>
-          Illustrative probabilities only. These samples have no measured model
-          accuracy and are not betting advice. Predictions are never guarantees.
+      <Title subtitle="Make your own picks on scheduled football matches.">Your next prediction</Title>
+      <Card style={{ marginBottom: 24 }}>
+        <Label>Match schedules supplied by API-Football.</Label>
+        <Label muted style={{ marginTop: 10, fontSize: 12 }}>
+          Picks reflect your opinion. Model probabilities and bookmaker odds are not available.
+          Your selections stay on this screen and earn no rewards.
         </Label>
       </Card>
-      <Title compact>Build your slip</Title>
-      <View style={{ gap: 13 }}>
-        {selections.map((item) => {
-          const checked = picks.includes(item.id);
-          return (
-            <Card key={item.id}>
-              <View style={s.row}>
-                <Crest code={item.code} color={item.color} size={38} />
-                <View style={{ flex: 1 }}>
-                  <Label style={{ fontSize: 13, fontWeight: "500" }}>
-                    {item.home} vs {item.away}
-                  </Label>
-                  <Label muted style={{ fontSize: 10 }}>
-                    Upcoming sample fixture · {item.market}
-                  </Label>
-                </View>
-              </View>
-              <View
-                style={[
-                  s.row,
-                  {
-                    marginTop: 18,
-                    paddingTop: 15,
-                    borderTopWidth: 1,
-                    borderColor: c.line,
-                    justifyContent: "space-between",
-                  },
-                ]}
-              >
-                <View>
-                  <Label style={{ fontSize: 13 }}>{item.selection}</Label>
-                  <Label muted style={{ fontSize: 10 }}>
-                    {item.probability}% illustrative probability · Demo
-                  </Label>
-                </View>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`${checked ? "Remove" : "Add"} ${item.selection}`}
-                  onPress={() => {
-                    toggle("picks", item.id);
-                    setCode("");
-                    setCopied(false);
-                  }}
-                  style={{
-                    padding: 9,
-                    backgroundColor: checked ? c.ink : c.canvas,
-                    borderRadius: 7,
-                  }}
-                >
-                  {checked ? (
-                    <Check size={17} color="white" />
-                  ) : (
-                    <Plus size={17} color={c.ink} />
-                  )}
-                </Pressable>
-              </View>
-            </Card>
-          );
-        })}
-      </View>
-      <Card style={{ marginTop: 26 }}>
-        <View style={[s.row, { justifyContent: "space-between" }]}>
-          <Label style={{ fontWeight: "600" }}>My prediction slip</Label>
-          <Label muted style={{ fontSize: 11 }}>
-            {selected.length} selections
-          </Label>
-        </View>
-        {selected.length === 0 ? (
-          <Label muted style={{ marginVertical: 20 }}>
-            Add a selection to start your matchday story.
-          </Label>
-        ) : (
-          selected.map((item) => (
-            <View
-              key={item.id}
-              style={{
-                paddingVertical: 15,
-                borderBottomWidth: 1,
-                borderColor: c.line,
-              }}
-            >
-              <Label style={{ fontSize: 12 }}>
-                {item.home} vs {item.away}
-              </Label>
-              <Label muted style={{ fontSize: 11 }}>
-                {item.selection}
-              </Label>
-            </View>
-          ))
-        )}
-        <Label muted style={{ fontSize: 10, marginVertical: 16 }}>
-          User-created prediction · Local demo only · No bookmaker connection
-        </Label>
-        <Button
-          disabled={!selected.length}
-          onPress={() => {
-            setCode(
-              `SC-DEMO-${selected.map((s) => selections.indexOf(s) + 1).join("")}`,
-            );
-            setCopied(false);
-          }}
-        >
-          Save demo slip & generate code
-        </Button>
-        {code && (
-          <View style={{ marginTop: 20, gap: 12 }}>
-            <Text
-              selectable
-              style={{
-                color: c.ink,
-                fontSize: 22,
-                fontWeight: "600",
-                letterSpacing: 2,
-              }}
-            >
-              {code}
-            </Text>
-            <Label muted style={{ fontSize: 11 }}>
-              Saved on this device. Public links and code import need the
-              backend.
-            </Label>
-            <View style={s.row}>
-              <Button
-                secondary
-                onPress={async () => {
-                  await Clipboard.setStringAsync(code);
-                  setCopied(true);
-                }}
-              >
-                {copied ? "Copied ✓" : "Copy code"}
-              </Button>
-              <Button
-                secondary
-                onPress={() => {
-                  void Share.share({
-                    message: `Sport Coins · Demo prediction slip ${code}\n${selected.map((s) => `${s.home} vs ${s.away}: ${s.selection}`).join("\n")}\nIllustrative predictions only.`,
-                  });
-                }}
-              >
-                Share slip
-              </Button>
+      {feed.isPending ? <Card><Label>Loading scheduled matches…</Label></Card>
+        : feed.error && !feed.data ? (
+          <Card>
+            <Label>Match data is unavailable.</Label>
+            <Label muted style={{ marginVertical: 14 }}>{feed.error.message}</Label>
+            <Button disabled={feed.isFetching} onPress={() => { void feed.refetch(); }}>
+              {feed.isFetching ? "Checking…" : "Check connection"}
+            </Button>
+          </Card>
+        ) : feed.data ? (
+          <View>
+            <FootballStatus feed={feed.data} failed={!!feed.error} />
+            {unavailable && <Label accessibilityRole="alert" style={{ marginBottom: 16 }}>
+              Updates are unavailable. New picks are paused until match data refreshes.
+            </Label>}
+            <Button secondary disabled={feed.isFetching} onPress={() => { void feed.refetch(); }}>
+              {feed.isFetching ? "Checking…" : "Refresh matches"}
+            </Button>
+            <View style={{ gap: 14, marginTop: 20 }}>
+              {fixtures.map((match) => (
+                <Card key={match.id}>
+                  <View style={s.row}>
+                    <Crest code={match.homeCode} color={match.color} size={38} />
+                    <View style={{ flex: 1 }}>
+                      <Label style={{ fontWeight: "600" }}>{match.home} vs {match.away}</Label>
+                      <Label muted style={{ fontSize: 11, marginTop: 5 }}>{match.league}</Label>
+                      <Label muted style={{ fontSize: 11, marginTop: 5 }}>
+                        {new Date(match.kickoff).toLocaleString()} · Your local time
+                      </Label>
+                    </View>
+                  </View>
+                  <View style={[s.row, { flexWrap: "wrap", marginTop: 18 }]}>
+                    {(["home", "draw", "away"] as const).map((outcome) => (
+                      <Button key={outcome} secondary={picks[match.id] !== outcome} disabled={unavailable}
+                        onPress={() => {
+                          if (Date.parse(match.kickoff) <= Date.now()) { setNow(Date.now()); return; }
+                          setPicks((current) => {
+                            const next = { ...current };
+                            if (next[match.id] === outcome) delete next[match.id];
+                            else next[match.id] = outcome;
+                            return next;
+                          });
+                        }}>
+                        {`${picks[match.id] === outcome ? "✓ " : ""}${outcomeLabel(match.home, match.away, outcome)}`}
+                      </Button>
+                    ))}
+                  </View>
+                </Card>
+              ))}
+              {!fixtures.length && <Card>
+                <Label>No upcoming matches were returned for today.</Label>
+                <Label muted style={{ marginTop: 10, fontSize: 12 }}>
+                  Availability depends on the provider’s schedule and your plan’s season coverage.
+                </Label>
+              </Card>}
             </View>
           </View>
-        )}
+        ) : null}
+      <Card style={{ marginTop: 24 }}>
+        <Title compact>My picks · {selected.length}</Title>
+        {selected.length ? selected.map((match) => (
+          <View key={match.id} style={{ marginBottom: 14 }}>
+            <Label>{match.home} vs {match.away}</Label>
+            <Label muted style={{ marginTop: 4, fontSize: 12 }}>
+              {outcomeLabel(match.home, match.away, picks[match.id])}
+            </Label>
+          </View>
+        )) : <Label muted>Select a match outcome to start.</Label>}
+        <Label muted style={{ marginTop: 12, fontSize: 11 }}>
+          Picks disappear when matches leave the upcoming schedule. Published slips,
+          settlement, and rewards are not connected yet.
+        </Label>
       </Card>
     </View>
   );

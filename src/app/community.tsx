@@ -32,8 +32,13 @@ import { clubs, people, rooms } from "../data/demo";
 import { useApp } from "../store/use-app";
 import { supabase } from "../lib/supabase";
 import { ConnectedCommunity } from "../features/community/connected-community";
+import { DemoPreview } from "../components/demo-preview";
 export default function Community() {
-  return supabase ? <ConnectedCommunity /> : <DemoCommunity />;
+  return supabase ? <ConnectedCommunity /> : (
+    <DemoPreview title="Community needs a connection" description="Member posts and conversations will appear after the community service is connected.">
+      <DemoCommunity />
+    </DemoPreview>
+  );
 }
 function DemoCommunity() {
   const params = useLocalSearchParams<{ tab?: string }>();

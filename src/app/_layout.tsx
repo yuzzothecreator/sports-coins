@@ -20,18 +20,14 @@ import UserRound from "lucide-react-native/icons/user-round";
 import Bell from "lucide-react-native/icons/bell";
 import Coins from "lucide-react-native/icons/coins";
 import ChevronDown from "lucide-react-native/icons/chevron-down";
-import ArrowUpRight from "lucide-react-native/icons/arrow-up-right";
 import CircleHelp from "lucide-react-native/icons/circle-question-mark";
 import X from "lucide-react-native/icons/x";
 import Hexagon from "lucide-react-native/icons/hexagon";
-import Trophy from "lucide-react-native/icons/trophy";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StatusBar } from "expo-status-bar";
 import { colors as c, fonts } from "../theme";
 import { useBrandFonts } from "../lib/use-brand-fonts";
-import { Avatar, Button, Card, Crest, Label, s } from "../components/ui";
-import { useApp } from "../store/use-app";
-import { people, rooms } from "../data/demo";
+import { Avatar, Button, Card, Label, s } from "../components/ui";
 import { supabase } from "../lib/supabase";
 import {
   SessionProvider,
@@ -113,13 +109,10 @@ function Layout() {
   const desktop = width >= 1000;
   const path = usePathname();
   const [notice, setNotice] = useState(false);
-  const coins = useApp((x) => x.demoCoins);
-  const claim = useApp((x) => x.claim);
-  const claimed = useApp((x) => x.rewardClaimed);
   const { session } = useSession();
   const { data: profile } = useCurrentProfile();
   const displayName = !supabase
-    ? "Alex Morgan"
+    ? "Guest"
     : profile?.display_name || (session ? "Sports fan" : "Guest");
   const active = nav.find((n) => n.path === path)?.name || "Sport Coins";
   if (Platform.OS !== "web" && !fontsLoaded && !fontError)
@@ -207,25 +200,7 @@ function Layout() {
                       >
                         {n.name}
                       </Label>
-                      {n.name === "Community" && (
-                        <View
-                          style={{
-                            marginLeft: "auto",
-                            backgroundColor: selected ? "#36364E" : c.purple,
-                            paddingHorizontal: 6,
-                            borderRadius: 4,
-                          }}
-                        >
-                          <Label
-                            style={{
-                              fontSize: 9,
-                              color: selected ? "white" : c.ink,
-                            }}
-                          >
-                            12
-                          </Label>
-                        </View>
-                      )}
+
                     </Pressable>
                   );
                 })}
@@ -248,12 +223,9 @@ function Layout() {
                     Your next great prediction starts here.
                   </Label>
                   <Button
-                    onPress={claim}
-                    disabled={claimed === new Date().toDateString()}
+                    onPress={() => router.push("/play")}
                   >
-                    {claimed === new Date().toDateString()
-                      ? "Claimed today"
-                      : "Claim 50 demo coins"}
+                    Explore practice games
                   </Button>
                 </Card>
               </View>
@@ -280,7 +252,7 @@ function Layout() {
                     },
                   ]}
                 >
-                  <Avatar size={36} name={supabase ? displayName : undefined} />
+                  <Avatar size={36} name={displayName} />
                   <View>
                     <Label style={{ fontSize: 12, fontWeight: "600" }}>
                       {displayName}
@@ -290,7 +262,7 @@ function Layout() {
                         ? session
                           ? "Your account"
                           : "Sign in to connect"
-                        : "The matchday regular"}
+                        : "Account not connected"}
                     </Label>
                   </View>
                   <ChevronDown size={13} color={c.muted} />
@@ -337,13 +309,9 @@ function Layout() {
                 >
                   <Coins size={16} color="#A18A57" />
                   <Label style={{ fontSize: 12, fontWeight: "600" }}>
-                    {supabase ? "Demo games" : coins.toLocaleString()}
+                    Rewards unavailable
                   </Label>
-                  {desktop && !supabase && (
-                    <Label muted style={{ fontSize: 10 }}>
-                      demo coins
-                    </Label>
-                  )}
+
                 </View>
                 <Pressable
                   accessibilityRole="button"
@@ -357,17 +325,6 @@ function Layout() {
                   }}
                 >
                   <Bell size={21} color={c.ink} strokeWidth={1.5} />
-                  <View
-                    style={{
-                      position: "absolute",
-                      right: 8,
-                      top: 8,
-                      width: 5,
-                      height: 5,
-                      backgroundColor: "#B7965A",
-                      borderRadius: 5,
-                    }}
-                  />
                 </Pressable>
                 {desktop && (
                   <Pressable
@@ -376,7 +333,7 @@ function Layout() {
                   >
                     <Avatar
                       size={34}
-                      name={supabase ? displayName : undefined}
+                      name={displayName}
                     />
                   </Pressable>
                 )}
@@ -396,7 +353,7 @@ function Layout() {
                 style={{
                   flexDirection: "row",
                   gap: 36,
-                  maxWidth: supabase ? 900 : 1320,
+                  maxWidth: 900,
                   width: "100%",
                   alignSelf: "center",
                 }}
@@ -404,141 +361,6 @@ function Layout() {
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Slot />
                 </View>
-                {width >= 1250 && !supabase && (
-                  <View style={{ width: 286, gap: 27 }}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Label style={{ fontWeight: "600" }}>
-                        Your matchday, connected.
-                      </Label>
-                      <ArrowUpRight size={16} color={c.muted} />
-                    </View>
-                    <Card
-                      style={{ backgroundColor: "#F8F8FA", borderWidth: 0 }}
-                    >
-                      <View style={s.row}>
-                        <View
-                          style={{
-                            width: 6,
-                            height: 6,
-                            backgroundColor: c.green,
-                            borderRadius: 5,
-                          }}
-                        />
-                        <Label muted style={{ fontSize: 10, letterSpacing: 1 }}>
-                          THE BIG CONVERSATION
-                        </Label>
-                      </View>
-                      <Text
-                        style={{
-                          color: c.ink,
-                          fontSize: 25,
-                          fontFamily: fonts.heading,
-                          lineHeight: 32,
-                          letterSpacing: -0.8,
-                          fontWeight: "500",
-                          marginTop: 18,
-                        }}
-                      >
-                        {"A game of opinions.\nFind your people."}
-                      </Text>
-                      <Label muted style={{ marginVertical: 15, fontSize: 12 }}>
-                        From the first whistle to the final word. There’s a room
-                        for every fan.
-                      </Label>
-                      <Button
-                        onPress={() => router.push("/community?tab=Groups")}
-                      >
-                        Explore communities →
-                      </Button>
-                    </Card>
-                    <View>
-                      <Label style={{ fontWeight: "600", marginBottom: 20 }}>
-                        Suggested for you
-                      </Label>
-                      {people.slice(0, 3).map((name, i) => (
-                        <SuggestedPerson key={name} name={name} index={i} />
-                      ))}
-                    </View>
-                    <View style={{ height: 1, backgroundColor: c.line }} />
-                    <View>
-                      <View
-                        style={[
-                          s.row,
-                          {
-                            justifyContent: "space-between",
-                            marginBottom: 20,
-                          },
-                        ]}
-                      >
-                        <Label style={{ fontWeight: "600" }}>
-                          Rooms worth joining
-                        </Label>
-                        <Users size={16} color={c.muted} />
-                      </View>
-                      {rooms.slice(0, 3).map((room) => (
-                        <Pressable
-                          key={room.name}
-                          accessibilityRole="button"
-                          onPress={() => router.push("/community?tab=Groups")}
-                          style={[s.row, { marginBottom: 19, gap: 12 }]}
-                        >
-                          <Crest
-                            code={room.code}
-                            color={room.color}
-                            size={35}
-                          />
-                          <View>
-                            <Label style={{ fontSize: 12 }}>{room.name}</Label>
-                            <Label muted style={{ fontSize: 10 }}>
-                              {room.members} members
-                            </Label>
-                          </View>
-                          <ArrowUpRight
-                            size={13}
-                            color={c.muted}
-                            style={{ marginLeft: "auto" }}
-                          />
-                        </Pressable>
-                      ))}
-                    </View>
-                    <View
-                      style={{
-                        backgroundColor: "#FBFAF6",
-                        borderRadius: 10,
-                        padding: 18,
-                      }}
-                    >
-                      <View style={s.row}>
-                        <Trophy size={19} color="#A18A57" />
-                        <Label style={{ fontSize: 12, fontWeight: "600" }}>
-                          A little friendly competition
-                        </Label>
-                      </View>
-                      <Label muted style={{ fontSize: 11, marginVertical: 10 }}>
-                        Test your sports knowledge. Climb the ranks. Enjoy the
-                        game.
-                      </Label>
-                      <Pressable
-                        accessibilityRole="link"
-                        onPress={() => router.push("/play")}
-                      >
-                        <Label style={{ fontSize: 11 }}>
-                          See this week’s leaderboard →
-                        </Label>
-                      </Pressable>
-                    </View>
-                    <Label muted style={{ fontSize: 10, lineHeight: 18 }}>
-                      Sport Coins © 2026 · Demo experience · Virtual coins have
-                      no cash value.
-                    </Label>
-                  </View>
-                )}
               </View>
             </ScrollView>
             {!desktop && (
@@ -603,7 +425,7 @@ function Layout() {
             <Card style={{ width: "100%", maxWidth: 420 }}>
               <View style={[s.row, { justifyContent: "space-between" }]}>
                 <Label style={{ fontSize: 19, fontWeight: "600" }}>
-                  You’re all caught up.
+                  Notifications are not connected.
                 </Label>
                 <Pressable
                   accessibilityRole="button"
@@ -614,8 +436,7 @@ function Layout() {
                 </Pressable>
               </View>
               <Label muted style={{ marginTop: 18 }}>
-                Welcome to your demo arena. Follow a club, join a conversation,
-                or make your first prediction.
+                Match and community alerts will appear here once notifications are available.
               </Label>
               <Label muted style={{ marginTop: 12, fontSize: 12 }}>
                 Real match alerts will be available after a sports provider and
@@ -626,35 +447,5 @@ function Layout() {
         </Modal>
       </SafeAreaView>
     </SafeAreaProvider>
-  );
-}
-function SuggestedPerson({ name, index }: { name: string; index: number }) {
-  const follows = useApp((s) => s.following.includes(name));
-  const toggle = useApp((s) => s.toggle);
-  return (
-    <View style={[s.row, { marginBottom: 18 }]}>
-      <Avatar id={[47, 13, 44][index]} size={35} />
-      <View style={{ flex: 1 }}>
-        <Label style={{ fontSize: 12, fontWeight: "500" }}>{name}</Label>
-        <Label muted style={{ fontSize: 10 }}>
-          {["Football enthusiast", "The stats guy", "Tennis, always"][index]}
-        </Label>
-      </View>
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => toggle("following", name)}
-        style={{
-          paddingVertical: 5,
-          paddingHorizontal: 10,
-          borderWidth: 1,
-          borderColor: c.line,
-          borderRadius: 6,
-        }}
-      >
-        <Label style={{ fontSize: 10 }}>
-          {follows ? "Following" : "Follow +"}
-        </Label>
-      </Pressable>
-    </View>
   );
 }

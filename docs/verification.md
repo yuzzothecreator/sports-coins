@@ -41,3 +41,14 @@ The Expo ESLint wrapper incorrectly rejected the installed ESLint version. The p
 - Browser: empty sign-in/signup validation works, demo/profile navigation still works, and `/account` clearly reports an unconfigured service. No credentials were sent.
 - Hosted Auth, email delivery, PostgREST embedding, session switching, and live two-user browser tests remain pending the new project details.
 - The user explicitly selected a different project. No schema, settings, credentials, or data were changed on the existing connected project.
+
+## API-Football adapter
+
+- Provider integration is implemented, not live-activated: the user still needs to create a free account and add its key to the ignored `.env.server` file.
+- The server status endpoint returned `configured: false`; fixtures returned HTTP 503 without making an upstream request. The app displayed the corresponding connection state and did not substitute samples.
+- 19 checks passed across validation, database ownership, and provider tests. Provider checks use synthetic responses and an injected fetch; no synthetic scores are returned by the running service.
+- Verified normalization/null scores, explicit status phases, cache reuse and concurrent deduplication, secret-free responses, HTTP-200 provider errors, invalid payloads/IDs, 429 errors, stale fetch timestamps, and restart-safe daily quota accounting.
+- Browser verified retry, unsupported basketball coverage, and switching between the explicitly labelled sample demo and the provider-backed default.
+- Default provider interval is 1,200 seconds and daily backend budget is 90 calls. Continuous 15-second updates are not claimed for this free-tier configuration.
+- No API key header/name or synthetic test secret was found in the exported client JavaScript.
+- A temporary Expo dev-server run hit a filesystem watch timeout in this OneDrive checkout. Static export succeeded and the combined Node preview/backend is the verification path. Native-device provider access remains unverified.

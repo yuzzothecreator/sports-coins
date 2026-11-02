@@ -9,8 +9,13 @@ import { useApp } from "../store/use-app";
 import { colors as c } from "../theme";
 import { supabase } from "../lib/supabase";
 import { AccountScreen } from "../features/account/account-screen";
+import { DemoPreview } from "../components/demo-preview";
 export default function Profile() {
-  return supabase ? <AccountScreen /> : <DemoProfile />;
+  return supabase ? <AccountScreen /> : (
+    <DemoPreview title="Your account is not connected" description="Connect account services to sign in and create your own profile.">
+      <DemoProfile />
+    </DemoPreview>
+  );
 }
 function DemoProfile() {
   const { following, saved, demoCoins, picks, rewardClaimed, triviaDone } =

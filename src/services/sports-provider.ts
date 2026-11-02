@@ -4,8 +4,8 @@ export interface SportsProvider {
   getFixtures(sport?: string): Promise<Fixture[]>;
   getFixture(id: string): Promise<Fixture | undefined>;
 }
-// UI uses static demo fixtures in milestone 1. Future API adapters implement this
-// contract through a server endpoint; provider credentials never belong in Expo.
+// Samples are available through the explicitly labelled demo view. Provider data
+// uses football.ts and server/football.mjs; credentials never belong in Expo.
 export const demoProvider: SportsProvider = {
   mode: "demo",
   async getFixtures(sport) {

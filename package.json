@@ -52,11 +52,11 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "eslint src scripts/serve.mjs --max-warnings 0",
+    "lint": "eslint src server scripts/serve.mjs metro.config.js --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "build:web": "expo export --platform web",
     "preview": "node scripts/serve.mjs",
-    "test": "node --test tests/account.test.mjs tests/database.test.mjs"
+    "test": "node --test tests/account.test.mjs tests/database.test.mjs tests/football.test.mjs tests/sports-http.test.mjs"
   },
   "private": true
 }

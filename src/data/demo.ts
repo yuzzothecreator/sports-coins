@@ -10,6 +10,9 @@ export type Fixture = {
   status: string;
   color: string;
   time: string;
+  source?: "api-football";
+  phase?: "live" | "paused" | "finished" | "scheduled" | "cancelled" | "unknown";
+  kickoff?: string;
 };
 export const fixtures: Fixture[] = [
   {

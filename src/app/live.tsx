@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { View, Pressable } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import ArrowUpRight from "lucide-react-native/icons/arrow-up-right";
 import Radio from "lucide-react-native/icons/radio";
 import Trophy from "lucide-react-native/icons/trophy";
 import {
   Badge,
+  Button,
   Card,
   Crest,
   Label,
@@ -18,6 +19,8 @@ import {
 import { AppText as Text } from "../components/typography";
 import { fixtures, Fixture } from "../data/demo";
 import { colors as c, fonts } from "../theme";
+import { FootballScreen } from "../features/sports/football-screen";
+import { FootballDetails } from "../features/sports/football-details";
 
 function Spotlight({ match }: { match: Fixture }) {
   return (
@@ -175,6 +178,21 @@ function Spotlight({ match }: { match: Fixture }) {
 }
 
 export default function Live() {
+  const [demo, setDemo] = useState(false);
+  const { fixture } = useLocalSearchParams<{ fixture?: string }>();
+  if (fixture) return <FootballDetails id={fixture} />;
+  return (
+    <View>
+      <View style={{ alignSelf: "flex-end", marginBottom: 20 }}>
+        <Button secondary onPress={() => setDemo((v) => !v)}>
+          {demo ? "Use API-Football data" : "View labelled sample demo"}
+        </Button>
+      </View>
+      {demo ? <DemoLive /> : <FootballScreen />}
+    </View>
+  );
+}
+function DemoLive() {
   const [sport, setSport] = useState("Football");
   const [status, setStatus] = useState("All");
   const [search, setSearch] = useState("");

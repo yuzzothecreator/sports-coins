@@ -1,5 +1,7 @@
 # Connect accounts and community
 
+Update 2026-11-02: selected project `oaualaaqnopgozzaipgv`, with URL saved in the ignored `.env`. The Supabase connector denied access, so no hosted schema changes were made. Authorize its organization through the connector and retrieve its publishable key before completing activation.
+
 The user selected a **different Supabase project** from the existing connected one. No changes were made to the existing project. The app is ready for the new project's reference/URL and publishable key; do not reuse another project's credentials.
 
 ## Setup sequence

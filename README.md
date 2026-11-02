@@ -2,6 +2,14 @@
 
 Predict. Play. Connect.
 
+## Current data status
+
+Update 2026-11-02: API-Football authentication succeeded and returned 269 fixtures for today. The server key is configured in the ignored `.env.server`. Supabase project `oaualaaqnopgozzaipgv` was selected and its URL saved in the ignored `.env`, but the connector denied access to that project and its publishable key is still missing. Accounts/community activation remains blocked on that access.
+
+Real sports data is not activated until `API_FOOTBALL_KEY` is configured in the ignored `.env.server` file. Expo and the static preview now share `/api/sports/*` endpoints; no separate web backend process is needed during Expo development. Home, Live Scores, and Predictions use the provider feed. Predictions has personal match-result picks, with no invented probabilities or bookmaker codes. Earlier demo slip behavior described below has been replaced.
+
+Community and profiles require the separate Sport Coins Supabase project; the existing connected finance project must not be reused. Sample community/profile/game screens are opt-in labelled previews. Rewards and real leaderboards remain unconnected. The shell shows a guest identity and unavailable rewards instead of fabricated account data. See `docs/account-setup.md` and `docs/api-football-setup.md` for activation. Provider-authenticated verification is still pending credentials.
+
 Expo SDK 58 / React Native / TypeScript application for Android, iOS, and web. This first milestone follows the supplied light community reference: white surfaces, navy typography, thin borders, club circles, and responsive navigation.
 
 The visual system pairs bundled **Manrope** headings with **Inter** body text, a deep navy / warm gold palette, softly elevated cards, and consistent type weights across native and web. Fonts load from bundled assets with no Google Fonts network request. Shared typography and input components apply the system throughout the app. Home and Live Scores feature navy panels; Live Scores includes sport chips, segmented status filters, and a featured demo match. This is a coordinated light theme; a user-selectable dark mode remains a future milestone. Font licenses are included in `docs/font-licenses/`.
@@ -42,6 +50,7 @@ Web output is in `dist/`. No native build has been verified on a physical device
 - Demo profile, three-step onboarding, notification status dialog, and validated account forms.
 - Supabase-backed session handling, account/profile creation and editing, and connected posts/replies/likes/bookmarks/follows when a project is configured.
 - Sports-provider contract, database migrations, and ownership/rate-limit tests.
+- API-Football server adapter, cached provider-backed Home/Live Scores, source/freshness states, and persistent quota protection. Activation still needs the user's API key; see `docs/api-football-setup.md`.
 
 Without a configured Supabase project, posts, likes, bookmarks, follows, selected picks, messages, trivia completion, and demo coins persist through AsyncStorage/Zustand. Demo replies and practice scores last for the screen/session. Daily rewards use the device date. Trivia is one sample question, once per device state, without a timer. A correct answer earns 100 demo coins; an incorrect answer earns none. Daily check-in earns 50. Opening balance is 1,250. Reset site storage/app data to restart. Configured community data uses Supabase and is never populated from the demo store.
 
@@ -60,7 +69,7 @@ src/services/               Provider abstraction foundation
 supabase/migrations/        Initial schema and access policies
 ```
 
-Styling uses React Native StyleSheet/shared tokens. NativeWind, dark theme, and animation polish are deferred. Reanimated/Gesture Handler are installed through Expo. React Hook Form and Zod validate account inputs. TanStack Query manages connected profiles/community data; fixtures still use the static demo source.
+Styling uses React Native StyleSheet/shared tokens. NativeWind, dark theme, and animation polish are deferred. Reanimated/Gesture Handler are installed through Expo. React Hook Form and Zod validate account inputs. TanStack Query manages connected profiles/community and provider data. Home and Live Scores now default to the backend API; missing credentials show a connection state, never sample scores. A labelled demo is explicitly selectable on Live Scores.
 
 ## Optional Supabase
 
@@ -81,7 +90,7 @@ The CLI generated `supabase/config.toml` and the migrations. The migrations run 
 ## Remaining milestones
 
 - Connect the selected Supabase project and verify live signup → profile → post → second-user reply. Add password recovery, private-profile settings, native confirmation links, and hardened native token storage.
-- Real provider adapters through trusted backend endpoints, caching, freshness indicators.
+- Activate and live-verify the API-Football backend using the user's key. Add the other sport adapters and production hosting/shared caching. The free-tier default refresh interval is 20 minutes, not continuous live polling.
 - Statistical prediction snapshots, evaluation, and server-enforced kickoff locks. Sample probabilities have no measured accuracy.
 - Server-owned slip publication/import, immutable selections, and shareable images. Demo codes are local selection identifiers, not bookmaker codes.
 - Uploads, moderation, blocks, reports, and Realtime chat. Basic public social data and posting rate limits are implemented; chat tables deny client writes until moderation endpoints exist. Public social writes should not be broadly released until moderation/reporting is added.

@@ -7,7 +7,11 @@ import Trophy from "lucide-react-native/icons/trophy";
 import { Avatar, Button, Card, Label, Tabs, Title, s } from "../components/ui";
 import { useApp } from "../store/use-app";
 import { colors as c } from "../theme";
+import { DemoPreview } from "../components/demo-preview";
 export default function Play() {
+  return <DemoPreview title="Games and rewards are not connected" description="Verified games, real rankings, and server-managed balances are not available yet."><DemoPlay /></DemoPreview>;
+}
+function DemoPlay() {
   const { claim, rewardClaimed, triviaDone, trivia } = useApp();
   const [answer, setAnswer] = useState<number | null>(null);
   const [tab, setTab] = useState("This week");
