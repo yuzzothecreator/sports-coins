@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
 import {
   Badge,
   Button,
@@ -61,9 +62,21 @@ export function FootballStatus({
   );
 }
 export function FootballFixtures({ compact = false }: { compact?: boolean }) {
-  const feed = useFootballFeed();
+  const params = useLocalSearchParams<{ date?: string }>();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Nairobi", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const selectedDate = !compact && typeof params.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(params.date) ? params.date : today;
+  const feed = useFootballFeed(undefined, compact ? undefined : selectedDate);
+  const changeDate = (offset: number) => {
+    const date = new Date(`${selectedDate}T12:00:00Z`);
+    if (!Number.isFinite(date.getTime())) return;
+    date.setUTCDate(date.getUTCDate() + offset);
+    router.setParams({ date: date.toISOString().slice(0, 10) });
+  };
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
+  const [page, setPage] = useState({ key: "", count: 30 });
+  const pageKey = JSON.stringify([selectedDate, search, status]);
+  const visibleCount = page.key === pageKey ? page.count : 30;
   const rows = (feed.data?.fixtures || []).filter(
     (f) =>
       `${f.home} ${f.away} ${f.league}`
@@ -78,6 +91,15 @@ export function FootballFixtures({ compact = false }: { compact?: boolean }) {
     <View>
       {!compact && (
         <View style={{ marginBottom: 18 }}>
+          <Title compact>Match calendar</Title>
+          <View style={[s.row, { flexWrap: "wrap", justifyContent: "space-between", marginBottom: 12 }]}>
+            <Button secondary onPress={() => changeDate(-1)}>← Previous day</Button>
+            <Button secondary disabled={selectedDate >= today} onPress={() => changeDate(1)}>Next day →</Button>
+          </View>
+          <Label style={{ textAlign: "center", marginBottom: 12 }}>{selectedDate} · Africa/Nairobi</Label>
+          {selectedDate !== today && <View style={{ marginBottom: 12 }}>
+            <Button secondary onPress={() => router.setParams({ date: today })}>Back to today</Button>
+          </View>}
           <SearchBox
             value={search}
             onChangeText={setSearch}
@@ -147,14 +169,19 @@ export function FootballFixtures({ compact = false }: { compact?: boolean }) {
               </Button>
             </View>
             <View style={{ gap: 14 }}>
-              {(compact ? rows.slice(0, 3) : rows).map((f) => (
-                <MatchCard key={f.id} match={f} />
+              {(compact ? rows.slice(0, 3) : rows.slice(0, visibleCount)).map((f) => (
+                <MatchCard key={f.id} match={f} fixtureDate={compact ? undefined : selectedDate} />
               ))}
+              {!compact && rows.length > visibleCount && (
+                <Button secondary onPress={() => setPage({ key: pageKey, count: visibleCount + 30 })}>
+                  {`Show more matches (${Math.min(visibleCount, rows.length)} of ${rows.length})`}
+                </Button>
+              )}
               {rows.length === 0 && (
                 <Card>
                   <Label>No provider fixtures in this view.</Label>
                   <Label muted style={{ fontSize: 12, marginTop: 8 }}>
-                    There may be no matching matches today, or your plan may
+                    There may be no matching matches on this date, or your plan may
                     limit this season’s coverage.
                   </Label>
                 </Card>

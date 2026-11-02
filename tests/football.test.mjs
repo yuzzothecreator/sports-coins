@@ -25,6 +25,20 @@ const ok = () =>
     status: 200,
   });
 const budget = { reserve: async () => {} };
+test("previous dates use separate provider caches and report the requested date", async () => {
+  const urls = [];
+  const service = createFootballService({ key: "test-only", budget, fetchImpl: async (url) => { urls.push(url); return ok(); } });
+  const previous = await service.fixtures("2026-10-31");
+  await service.fixtures("2026-11-01");
+  await service.fixtures("2026-10-31");
+  assert.equal(previous.date, "2026-10-31");
+  assert.equal(urls.length, 2);
+  assert.ok(urls[0].includes("date=2026-10-31"));
+  for (const invalid of ["2026-02-30", "bad", "2026-13-01", ""]) {
+    await assert.rejects(service.fixtures(invalid), (error) => error.status === 400);
+  }
+  assert.equal(urls.length, 2);
+});
 test("period scores preserve zero and missing values, with the provider match clock", () => {
   const match = normalizeFixture({
     ...raw,

@@ -181,7 +181,7 @@ export function createFootballService({
           stale: false,
           provider: "API-Football",
           timezone,
-          date: date(),
+          date: params.date || new Intl.DateTimeFormat("en-CA", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(fixtures[0]?.kickoff || now())),
           refreshSeconds: interval / 1000,
           partial: Number(body.paging?.total || 1) > 1,
         };
@@ -208,8 +208,12 @@ export function createFootballService({
   }
   return {
     status,
-    async fixtures() {
-      return load("fixtures", { date: date(), timezone });
+    async fixtures(selectedDate = date()) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(selectedDate) ||
+          !Number.isFinite(Date.parse(selectedDate)) ||
+          new Date(selectedDate).toISOString().slice(0, 10) !== selectedDate)
+        throw new SportsError("Choose a valid date in YYYY-MM-DD format.", 400);
+      return load("fixtures", { date: selectedDate, timezone });
     },
     async fixture(id) {
       if (!/^\d{1,12}$/.test(id))

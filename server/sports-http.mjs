@@ -16,7 +16,7 @@ export function createSportsHandler(football, allowedOrigin) {
       let data;
       if (url.pathname === "/api/sports/status") data = football.status();
       else if (url.pathname === "/api/sports/fixtures")
-        data = await football.fixtures();
+        data = await football.fixtures(url.searchParams.get("date") ?? undefined);
       else if (url.pathname === "/api/sports/fixture")
         data = await football.fixture(url.searchParams.get("id") || "");
       else throw new SportsError("Sports endpoint not found.", 404);

@@ -95,11 +95,11 @@ async function request(path: string) {
     clearTimeout(timeout);
   }
 }
-export function useFootballFeed(id?: string) {
+export function useFootballFeed(id?: string, date?: string) {
   return useQuery({
-    queryKey: ["sports", "football", id || "today"],
+    queryKey: ["sports", "football", id || date || "today"],
     queryFn: () =>
-      request(id ? `fixture?id=${encodeURIComponent(id)}` : "fixtures"),
+      request(id ? `fixture?id=${encodeURIComponent(id)}` : date ? `fixtures?date=${encodeURIComponent(date)}` : "fixtures"),
     retry: false,
     refetchOnWindowFocus: false,
     refetchInterval: (query) =>

@@ -383,9 +383,11 @@ export function SportSelector({
 export function MatchCard({
   match,
   navigable = true,
+  fixtureDate,
 }: {
   match: Fixture;
   navigable?: boolean;
+  fixtureDate?: string;
 }) {
   const real = match.source === "api-football";
   return (
@@ -395,7 +397,7 @@ export function MatchCard({
       disabled={!navigable}
       onPress={() =>
         real
-          ? router.push({ pathname: "/live", params: { fixture: match.id } })
+          ? router.push({ pathname: "/live", params: { fixture: match.id, ...(fixtureDate ? { date: fixtureDate } : {}) } })
           : router.push(`/match/${match.id}`)
       }
     >

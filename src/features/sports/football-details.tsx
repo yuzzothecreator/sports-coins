@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Button, Card, Label, MatchCard, Title, s } from "../../components/ui";
 import { useFootballFeed } from "../../services/football";
 import { FootballStatus } from "./football-screen";
@@ -16,6 +16,7 @@ export function FootballDetails({ id }: { id: string }) {
   );
 }
 function Details({ id }: { id: string }) {
+  const { date } = useLocalSearchParams<{ date?: string }>();
   const feed = useFootballFeed(id);
   const match = feed.data?.fixtures[0];
   return (
@@ -110,7 +111,7 @@ function Details({ id }: { id: string }) {
         </Card>
       )}
       <View style={{ marginTop: 20 }}>
-        <Button secondary onPress={() => router.push("/live")}>
+        <Button secondary onPress={() => router.push({ pathname: "/live", params: typeof date === "string" ? { date } : {} })}>
           Back to fixtures
         </Button>
       </View>
