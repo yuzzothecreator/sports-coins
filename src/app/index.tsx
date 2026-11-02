@@ -1,13 +1,11 @@
-import { AppText as Text } from "../components/typography";
 import { useState } from "react";
 import { View, Pressable } from "react-native";
 import { router } from "expo-router";
 import ArrowUpRight from "lucide-react-native/icons/arrow-up-right";
-import Compass from "lucide-react-native/icons/compass";
 import Sparkles from "lucide-react-native/icons/sparkles";
 import Trophy from "lucide-react-native/icons/trophy";
-import { Button, Card, Label, SportSelector, Title, s } from "../components/ui";
-import { colors as c, fonts } from "../theme";
+import { Card, Label, SportSelector, Title, s } from "../components/ui";
+import { colors as c } from "../theme";
 import { FootballFixtures } from "../features/sports/football-screen";
 import { supabase } from "../lib/supabase";
 import { useCurrentProfile } from "../features/account/session";
@@ -16,90 +14,9 @@ export default function Home() {
   const { data: profile } = useCurrentProfile();
   return (
     <View>
-      <Title subtitle="A new day. A new game. Make it yours.">
+      <Title subtitle="Live action, upcoming kickoffs, and the final word.">
         {`Your arena, ${supabase ? profile?.display_name.split(" ")[0] || "sports fan" : "sports fan"}.`}
       </Title>
-      <Card
-        style={{
-          backgroundColor: c.navy,
-          borderWidth: 0,
-          padding: 28,
-          marginBottom: 28,
-          overflow: "hidden",
-        }}
-      >
-        <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            right: -90,
-            top: -30,
-            width: 300,
-            height: 390,
-            borderWidth: 1,
-            borderRadius: 150,
-            borderColor: "#FFFFFF10",
-            transform: [{ rotate: "30deg" }],
-          }}
-        />
-        <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            right: -50,
-            top: 10,
-            width: 220,
-            height: 310,
-            borderWidth: 1,
-            borderRadius: 120,
-            borderColor: "#FFFFFF10",
-            transform: [{ rotate: "30deg" }],
-          }}
-        />
-        <View style={s.row}>
-          <Compass size={16} color="#D9C399" />
-          <Label
-            style={{
-              fontSize: 9,
-              letterSpacing: 1.8,
-              color: "#D9C399",
-              fontWeight: "600",
-            }}
-          >
-            WELCOME TO YOUR ARENA
-          </Label>
-        </View>
-        <Text
-          style={{
-            fontSize: 35,
-            lineHeight: 45,
-            letterSpacing: -1.2,
-            fontFamily: fonts.heading,
-            color: "white",
-            marginTop: 18,
-            fontWeight: "500",
-          }}
-        >
-          {"More than a spectator.\nPart of the game."}
-        </Text>
-        <Label
-          style={{
-            marginTop: 15,
-            maxWidth: 350,
-            color: "#B9C5DA",
-            fontSize: 12,
-            lineHeight: 21,
-          }}
-        >
-          Follow the action. Share your instincts. Find a community that loves
-          the game like you do.
-        </Label>
-        <View style={{ alignSelf: "flex-start", marginTop: 23 }}>
-          <Button secondary onPress={() => router.push("/community")}>
-            Find your community ↗
-          </Button>
-        </View>
-      </Card>
       <View style={{ marginBottom: 27 }}>
         <SportSelector value={sport} onChange={setSport} />
       </View>

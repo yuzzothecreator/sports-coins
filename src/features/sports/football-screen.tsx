@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View } from "react-native";
+import { View, Pressable, ScrollView, useWindowDimensions } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import {
   Badge,
@@ -9,7 +9,6 @@ import {
   MatchCard,
   SearchBox,
   SportSelector,
-  Tabs,
   Title,
   s,
 } from "../../components/ui";
@@ -62,7 +61,9 @@ export function FootballStatus({
   );
 }
 export function FootballFixtures({ compact = false }: { compact?: boolean }) {
-  const params = useLocalSearchParams<{ date?: string }>();
+  const { width } = useWindowDimensions();
+  const columns = width >= 1100;
+  const params = useLocalSearchParams<{ date?: string; status?: string }>();
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Nairobi", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   const selectedDate = !compact && typeof params.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(params.date) ? params.date : today;
   const feed = useFootballFeed(undefined, compact ? undefined : selectedDate);
@@ -73,11 +74,19 @@ export function FootballFixtures({ compact = false }: { compact?: boolean }) {
     router.setParams({ date: date.toISOString().slice(0, 10) });
   };
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("All");
+  const [status, setStatus] = useState(() => !compact && ["In play", "Upcoming", "Completed"].includes(params.status || "") ? params.status! : "All");
   const [page, setPage] = useState({ key: "", count: 30 });
   const pageKey = JSON.stringify([selectedDate, search, status]);
   const visibleCount = page.key === pageKey ? page.count : 30;
-  const rows = (feed.data?.fixtures || []).filter(
+  const fixtures = feed.data?.fixtures || [];
+  const counts = {
+    All: fixtures.length,
+    "In play": fixtures.filter((f) => ["live", "paused"].includes(f.phase)).length,
+    Upcoming: fixtures.filter((f) => f.phase === "scheduled").length,
+    Completed: fixtures.filter((f) => f.phase === "finished").length,
+  };
+  const rank = (phase: string) => ["live", "paused"].includes(phase) ? 0 : phase === "scheduled" ? 1 : phase === "finished" ? 2 : 3;
+  const rows = fixtures.filter(
     (f) =>
       `${f.home} ${f.away} ${f.league}`
         .toLowerCase()
@@ -86,9 +95,37 @@ export function FootballFixtures({ compact = false }: { compact?: boolean }) {
         (status === "In play" && ["live", "paused"].includes(f.phase)) ||
         (status === "Upcoming" && f.phase === "scheduled") ||
         (status === "Completed" && f.phase === "finished")),
-  );
+  ).sort((a, b) => rank(a.phase) - rank(b.phase) ||
+    (a.phase === "finished" ? Date.parse(b.kickoff) - Date.parse(a.kickoff) : Date.parse(a.kickoff) - Date.parse(b.kickoff)));
+  const homeSelection = [
+    ...rows.filter((match) => rank(match.phase) === 0).slice(0, 2),
+    ...rows.filter((match) => rank(match.phase) === 1).slice(0, 2),
+    ...rows.filter((match) => rank(match.phase) === 2).slice(0, 1),
+  ];
+  const displayed = compact
+    ? [...homeSelection, ...rows.filter((match) => !homeSelection.includes(match))].slice(0, 5).sort((a, b) => rank(a.phase) - rank(b.phase))
+    : rows.slice(0, visibleCount);
+  const section = (phase: string) => ["live", "paused"].includes(phase) ? "In play" : phase === "scheduled" ? "Next kickoffs" : phase === "finished" ? "Final whistle" : "Other matches";
   return (
     <View>
+      {feed.data && <View style={{ backgroundColor: c.navy, borderRadius: 22, padding: 22, marginBottom: 24, overflow: "hidden" }}>
+        <View style={[s.row, { justifyContent: "space-between", marginBottom: 20 }]}>
+          <Label style={{ color: "#D9C399", fontSize: 10, fontWeight: "600", letterSpacing: 1.8 }}>THE MATCHDAY EDIT</Label>
+          <Label style={{ color: "#A9B7CF", fontSize: 10 }}>{feed.data.date.slice(5).replace("-", " / ")}</Label>
+        </View>
+        <Label style={{ color: "white", fontSize: 25, fontWeight: "700", letterSpacing: -0.7 }}>Every match. At a glance.</Label>
+        <View style={[s.row, { marginTop: 24, gap: 0 }]}>
+          {([ ["In play", counts["In play"], "#9AECC6"], ["Upcoming", counts.Upcoming, "#D9C399"], ["Completed", counts.Completed, "#D1D9E6"] ] as const).map(([label, count, color], index) => (
+            <Pressable key={label} accessibilityRole="button" accessibilityLabel={`Show ${count} ${label.toLowerCase()} matches`}
+              onPress={() => compact ? router.push({ pathname: "/live", params: { status: label } }) : setStatus(label)}
+              style={{ flex: 1, minHeight: 56, paddingLeft: index ? 15 : 0, borderLeftWidth: index ? 1 : 0, borderColor: "#FFFFFF20" }}>
+              <Label style={{ color, fontSize: 26, fontWeight: "700", fontVariant: ["tabular-nums"] }}>{count}</Label>
+              <Label style={{ color: "#B9C8DD", fontSize: 10, marginTop: 5 }}>{label}</Label>
+            </Pressable>
+          ))}
+        </View>
+        {(feed.data.stale || feed.error) && <Label style={{ color: "#D9C399", fontSize: 10, marginTop: 16 }}>Saved data · updates delayed</Label>}
+      </View>}
       {!compact && (
         <View style={{ marginBottom: 18 }}>
           <Title compact>Match calendar</Title>
@@ -105,11 +142,15 @@ export function FootballFixtures({ compact = false }: { compact?: boolean }) {
             onChangeText={setSearch}
             placeholder="Search provider fixtures"
           />
-          <Tabs
-            items={["All", "In play", "Upcoming", "Completed"]}
-            value={status}
-            onChange={setStatus}
-          />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 16 }}>
+            {(["All", "In play", "Upcoming", "Completed"] as const).map((item) => (
+              <Pressable key={item} accessibilityRole="tab" accessibilityState={{ selected: status === item }} onPress={() => setStatus(item)}
+                style={[s.row, { minHeight: 44, gap: 8, paddingHorizontal: 16, borderRadius: 24, backgroundColor: status === item ? c.ink : "white", borderWidth: 1, borderColor: status === item ? c.ink : c.line }]}>
+                <Label style={{ fontSize: 12, fontWeight: "600", color: status === item ? "white" : c.muted }}>{item}</Label>
+                <Label style={{ fontSize: 10, color: status === item ? "#D9C399" : c.muted }}>{counts[item]}</Label>
+              </Pressable>
+            ))}
+          </ScrollView>
         </View>
       )}
       {feed.isPending ? (
@@ -169,8 +210,20 @@ export function FootballFixtures({ compact = false }: { compact?: boolean }) {
               </Button>
             </View>
             <View style={{ gap: 14 }}>
-              {(compact ? rows.slice(0, 3) : rows.slice(0, visibleCount)).map((f) => (
-                <MatchCard key={f.id} match={f} fixtureDate={compact ? undefined : selectedDate} />
+              {Array.from(new Set(displayed.map((match) => section(match.phase)))).map((heading, index) => (
+                <View key={heading}>
+                    <View style={[s.row, { gap: 8, marginBottom: 13, marginTop: index ? 10 : 0 }]}>
+                      <View style={{ height: 6, width: 6, borderRadius: 3, backgroundColor: heading === "In play" ? c.green : heading === "Next kickoffs" ? c.gold : c.muted }} />
+                      <Label style={{ fontSize: 13, fontWeight: "600" }}>{heading}</Label>
+                    </View>
+                    <View style={{ flexDirection: columns ? "row" : "column", flexWrap: "wrap", gap: 14 }}>
+                      {displayed.filter((match) => section(match.phase) === heading).map((match) => (
+                        <View key={match.id} style={{ width: columns ? "48.8%" : "100%" }}>
+                          <MatchCard match={match} fixtureDate={compact ? undefined : selectedDate} />
+                        </View>
+                      ))}
+                    </View>
+                </View>
               ))}
               {!compact && rows.length > visibleCount && (
                 <Button secondary onPress={() => setPage({ key: pageKey, count: visibleCount + 30 })}>

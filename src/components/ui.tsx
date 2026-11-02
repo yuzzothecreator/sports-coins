@@ -380,113 +380,61 @@ export function SportSelector({
     </ScrollView>
   );
 }
-export function MatchCard({
-  match,
-  navigable = true,
-  fixtureDate,
-}: {
+export function MatchCard({ match, navigable = true, fixtureDate }: {
   match: Fixture;
   navigable?: boolean;
   fixtureDate?: string;
 }) {
   const real = match.source === "api-football";
+  const live = ["live", "paused"].includes(match.phase || "");
+  const upcoming = match.phase === "scheduled" || match.status === "Upcoming";
+  const finished = match.phase === "finished" || match.status === "FT";
+  const foreground = live ? "#FFFFFF" : c.ink;
+  const secondary = live ? "#B9C8DD" : c.muted;
+  const kickoff = match.kickoff ? new Date(match.kickoff) : null;
+  const time = kickoff ? kickoff.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : match.time;
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${match.home} versus ${match.away}, ${match.status}, ${match.score}, ${real ? "API-Football data" : "demo fixture"}`}
+      accessibilityRole={navigable ? "button" : undefined}
+      accessibilityLabel={`${match.home} versus ${match.away}, ${match.status}, ${upcoming ? time : match.score}, ${real ? "API-Football data" : "demo fixture"}`}
       disabled={!navigable}
-      onPress={() =>
-        real
-          ? router.push({ pathname: "/live", params: { fixture: match.id, ...(fixtureDate ? { date: fixtureDate } : {}) } })
-          : router.push(`/match/${match.id}`)
-      }
+      style={({ pressed }) => ({ opacity: pressed ? 0.86 : 1 })}
+      onPress={() => real
+        ? router.push({ pathname: "/live", params: { fixture: match.id, ...(fixtureDate ? { date: fixtureDate } : {}) } })
+        : router.push(`/match/${match.id}`)}
     >
-      <Card>
-        <View style={[s.row, { justifyContent: "space-between" }]}>
-          <Label muted style={{ fontSize: 11 }}>
-            {match.league}
-          </Label>
-          <Badge
-            tone={
-              match.phase === "scheduled" || match.status === "Upcoming"
-                ? "gold"
-                : (real && !["live", "paused"].includes(match.phase || "")) ||
-                    match.status === "FT"
-                  ? "neutral"
-                  : "green"
-            }
-          >
-            {match.status === "FT" ? "Full time" : match.status}
-          </Badge>
-        </View>
-        <View
-          style={[s.row, { justifyContent: "space-between", marginTop: 23 }]}
-        >
-          <View style={{ alignItems: "center", width: 90 }}>
-            {real ? <TeamBadge uri={match.homeLogo} name={match.home} /> : <Crest code={match.homeCode} color={match.color} size={46} />}
-            <Label
-              style={{
-                fontSize: 12,
-                marginTop: 10,
-                fontWeight: "600",
-                textAlign: "center",
-              }}
-            >
-              {match.home}
-            </Label>
-          </View>
-          <View style={{ alignItems: "center" }}>
-            <Text
-              style={{
-                fontSize: 32,
-                fontFamily: fonts.heading,
-                color: c.ink,
-                fontVariant: ["tabular-nums"],
-                letterSpacing: -1,
-              }}
-            >
-              {match.score}
-            </Text>
-            <Label muted style={{ fontSize: 9, marginTop: 4 }}>
-              {real ? "API-FOOTBALL" : "DEMO FIXTURE"}
-            </Label>
-          </View>
-          <View style={{ alignItems: "center", width: 90 }}>
-            {real ? <TeamBadge uri={match.awayLogo} name={match.away} /> : <Crest code={match.awayCode} color="#5065A2" size={46} />}
-            <Label
-              style={{
-                fontSize: 12,
-                marginTop: 10,
-                fontWeight: "600",
-                textAlign: "center",
-              }}
-            >
-              {match.away}
+      <Card style={{ backgroundColor: live ? c.navy : "white", borderColor: live ? "#253B55" : c.line, padding: 20, overflow: "hidden" }}>
+        {live && <View pointerEvents="none" style={{ position: "absolute", width: 180, height: 180, borderRadius: 90, borderWidth: 30, borderColor: "#FFFFFF04", right: -45, top: -65 }} />}
+        <View style={[s.row, { justifyContent: "space-between", gap: 12 }]}>
+          <Label numberOfLines={1} style={{ flex: 1, color: secondary, fontSize: 11, fontWeight: "500" }}>{match.league}</Label>
+          <View style={[s.row, { gap: 5, backgroundColor: live ? "#1C413E" : upcoming ? c.softGold : c.canvas, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 5 }]}>
+            {live && <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: "#7EE4B4" }} />}
+            <Label style={{ fontSize: 9, fontWeight: "700", letterSpacing: 0.5, color: live ? "#9AECC6" : upcoming ? "#84652F" : c.muted }}>
+              {live ? `IN PLAY · ${match.status}` : upcoming ? "UPCOMING" : finished ? "FULL TIME" : match.status.toUpperCase()}
             </Label>
           </View>
         </View>
-        <View
-          style={{
-            marginTop: 22,
-            paddingTop: 12,
-            borderTopWidth: 1,
-            borderColor: c.line,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Label muted style={{ fontSize: 10 }}>
-            {real && match.kickoff
-              ? new Date(match.kickoff).toLocaleString()
-              : match.time}
-          </Label>
-          <View style={s.row}>
-            <Label style={{ fontSize: 10, fontWeight: "600" }}>
-              Match centre
-            </Label>
-            <ArrowRight size={12} color={c.ink} />
+        <View style={[s.row, { justifyContent: "space-between", alignItems: "center", marginVertical: 22, gap: 8 }]}>
+          <View style={{ flex: 1, alignItems: "center", gap: 10 }}>
+            <View style={{ backgroundColor: live ? "#FFFFFF" : "#F5F7FA", borderRadius: 18, padding: 10 }}>
+              {real ? <TeamBadge uri={match.homeLogo} name={match.home} size={44} /> : <Crest code={match.homeCode} color={match.color} size={44} />}
+            </View>
+            <Label numberOfLines={2} style={{ color: foreground, fontSize: 12, fontWeight: "600", textAlign: "center", minHeight: 32 }}>{match.home}</Label>
           </View>
+          <View style={{ alignItems: "center", minWidth: 82 }}>
+            <Text style={{ color: foreground, fontFamily: fonts.display, fontSize: upcoming ? 25 : 34, fontVariant: ["tabular-nums"], letterSpacing: -1 }}>{upcoming ? time : match.score}</Text>
+            <Label style={{ color: live ? "#9AECC6" : secondary, fontSize: 9, letterSpacing: 1, marginTop: 6 }}>{upcoming ? "KICKOFF" : live ? "MATCH SCORE" : finished ? "FINAL SCORE" : "SCORE"}</Label>
+          </View>
+          <View style={{ flex: 1, alignItems: "center", gap: 10 }}>
+            <View style={{ backgroundColor: live ? "#FFFFFF" : "#F5F7FA", borderRadius: 18, padding: 10 }}>
+              {real ? <TeamBadge uri={match.awayLogo} name={match.away} size={44} /> : <Crest code={match.awayCode} color="#5065A2" size={44} />}
+            </View>
+            <Label numberOfLines={2} style={{ color: foreground, fontSize: 12, fontWeight: "600", textAlign: "center", minHeight: 32 }}>{match.away}</Label>
+          </View>
+        </View>
+        <View style={[s.row, { borderTopWidth: 1, borderColor: live ? "#FFFFFF18" : c.line, paddingTop: 13, justifyContent: "space-between", gap: 10 }]}>
+          <Label style={{ color: secondary, fontSize: 10, flex: 1 }}>{kickoff ? kickoff.toLocaleDateString([], { month: "short", day: "numeric" }) + " · Local time" : match.time}{!real ? " · Demo" : ""}</Label>
+          {navigable && <View style={[s.row, { gap: 6 }]}><Label style={{ color: live ? "#D9C399" : c.ink, fontSize: 10, fontWeight: "600" }}>Match details</Label><ArrowRight size={13} color={live ? "#D9C399" : c.ink} /></View>}
         </View>
       </Card>
     </Pressable>
