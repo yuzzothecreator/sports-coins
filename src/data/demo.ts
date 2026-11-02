@@ -4,6 +4,8 @@ export type Fixture = {
   league: string;
   home: string;
   away: string;
+  homeLogo?: string | null;
+  awayLogo?: string | null;
   homeCode: string;
   awayCode: string;
   score: string;

@@ -21,6 +21,7 @@ import Disc from "lucide-react-native/icons/disc";
 import { router } from "expo-router";
 import { colors as c, fonts, radii } from "../theme";
 import { avatar, Fixture } from "../data/demo";
+import { TeamBadge } from "./team-badge";
 export function Label({
   children,
   muted = false,
@@ -420,7 +421,7 @@ export function MatchCard({
           style={[s.row, { justifyContent: "space-between", marginTop: 23 }]}
         >
           <View style={{ alignItems: "center", width: 90 }}>
-            <Crest code={match.homeCode} color={match.color} size={46} />
+            {real ? <TeamBadge uri={match.homeLogo} name={match.home} /> : <Crest code={match.homeCode} color={match.color} size={46} />}
             <Label
               style={{
                 fontSize: 12,
@@ -449,7 +450,7 @@ export function MatchCard({
             </Label>
           </View>
           <View style={{ alignItems: "center", width: 90 }}>
-            <Crest code={match.awayCode} color="#5065A2" size={46} />
+            {real ? <TeamBadge uri={match.awayLogo} name={match.away} /> : <Crest code={match.awayCode} color="#5065A2" size={46} />}
             <Label
               style={{
                 fontSize: 12,

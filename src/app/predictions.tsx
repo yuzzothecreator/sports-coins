@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { Button, Card, Crest, Label, Title, s } from "../components/ui";
+import { Button, Card, Label, Title, s } from "../components/ui";
+import { TeamBadge } from "../components/team-badge";
 import { FootballStatus } from "../features/sports/football-screen";
 import { useFootballFeed } from "../services/football";
 
@@ -52,7 +53,7 @@ export default function Predictions() {
               {fixtures.map((match) => (
                 <Card key={match.id}>
                   <View style={s.row}>
-                    <Crest code={match.homeCode} color={match.color} size={38} />
+                    <TeamBadge uri={match.homeLogo} name={match.home} size={38} />
                     <View style={{ flex: 1 }}>
                       <Label style={{ fontWeight: "600" }}>{match.home} vs {match.away}</Label>
                       <Label muted style={{ fontSize: 11, marginTop: 5 }}>{match.league}</Label>

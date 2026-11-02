@@ -1,27 +1,43 @@
 import { z } from "zod";
 
+const scorePair = z.object({
+  home: z.number().int().nonnegative().nullable(),
+  away: z.number().int().nonnegative().nullable(),
+});
 const rawFixture = z.object({
   fixture: z.object({
     id: z.number().int().positive(),
     date: z.string().datetime({ offset: true }),
+    referee: z.string().nullable().optional(),
+    venue: z.object({ name: z.string().nullable(), city: z.string().nullable() }).nullable().optional(),
     status: z.object({
       short: z.string(),
       long: z.string(),
       elapsed: z.number().nullable(),
+      extra: z.number().nullable().optional(),
     }),
   }),
   league: z.object({
     name: z.string(),
     country: z.string().nullable().optional(),
+    logo: z.string().nullable().optional(),
+    season: z.number().optional(),
+    round: z.string().nullable().optional(),
   }),
   teams: z.object({
-    home: z.object({ name: z.string() }),
-    away: z.object({ name: z.string() }),
+    home: z.object({ name: z.string(), logo: z.string().nullable().optional() }),
+    away: z.object({ name: z.string(), logo: z.string().nullable().optional() }),
   }),
   goals: z.object({
     home: z.number().int().nonnegative().nullable(),
     away: z.number().int().nonnegative().nullable(),
   }),
+  score: z.object({
+    halftime: scorePair.nullable().optional(),
+    fulltime: scorePair.nullable().optional(),
+    extratime: scorePair.nullable().optional(),
+    penalty: scorePair.nullable().optional(),
+  }).nullable().optional(),
 });
 export function normalizeFixture(value) {
   const raw = rawFixture.parse(value);
@@ -50,6 +66,24 @@ export function normalizeFixture(value) {
     league: raw.league.name,
     home: raw.teams.home.name,
     away: raw.teams.away.name,
+    homeLogo: raw.teams.home.logo || null,
+    awayLogo: raw.teams.away.logo || null,
+    leagueLogo: raw.league.logo || null,
+    country: raw.league.country || null,
+    season: raw.league.season || null,
+    round: raw.league.round || null,
+    referee: raw.fixture.referee || null,
+    venue: raw.fixture.venue?.name || null,
+    city: raw.fixture.venue?.city || null,
+    statusLabel: raw.fixture.status.long,
+    elapsed: raw.fixture.status.elapsed,
+    addedTime: raw.fixture.status.extra ?? null,
+    scores: {
+      halftime: raw.score?.halftime ?? null,
+      fulltime: raw.score?.fulltime ?? null,
+      extratime: raw.score?.extratime ?? null,
+      penalty: raw.score?.penalty ?? null,
+    },
     homeCode: initials(raw.teams.home.name),
     awayCode: initials(raw.teams.away.name),
     score: `${raw.goals.home ?? "—"} : ${raw.goals.away ?? "—"}`,

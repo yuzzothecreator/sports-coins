@@ -25,6 +25,39 @@ const ok = () =>
     status: 200,
   });
 const budget = { reserve: async () => {} };
+test("period scores preserve zero and missing values, with the provider match clock", () => {
+  const match = normalizeFixture({
+    ...raw,
+    fixture: { ...raw.fixture, status: { short: "2H", long: "Second Half", elapsed: 90, extra: 5 } },
+    score: { halftime: { home: 0, away: 1 }, fulltime: { home: null, away: null }, extratime: null, penalty: { home: 0, away: 0 } },
+  });
+  assert.deepEqual(match.scores.halftime, { home: 0, away: 1 });
+  assert.deepEqual(match.scores.fulltime, { home: null, away: null });
+  assert.deepEqual(match.scores.penalty, { home: 0, away: 0 });
+  assert.equal(match.scores.extratime, null);
+  assert.equal(match.elapsed, 90);
+  assert.equal(match.addedTime, 5);
+  assert.equal(match.statusLabel, "Second Half");
+  assert.equal(normalizeFixture(raw).scores.halftime, null);
+});
+test("provider badges and match details survive normalization without fabricated defaults", () => {
+  const match = normalizeFixture({
+    ...raw,
+    fixture: { ...raw.fixture, referee: "Test referee", venue: { name: "Test stadium", city: "Test city" } },
+    league: { name: "Test league", country: "Test country", logo: "https://example.com/league.png", season: 2026, round: "Round 3" },
+    teams: { home: { name: "Test Home", logo: "https://example.com/home.png" }, away: { name: "Test Away", logo: null } },
+  });
+  assert.equal(match.homeLogo, "https://example.com/home.png");
+  assert.equal(match.awayLogo, null);
+  assert.equal(match.leagueLogo, "https://example.com/league.png");
+  assert.equal(match.venue, "Test stadium");
+  assert.equal(match.city, "Test city");
+  assert.equal(match.referee, "Test referee");
+  assert.equal(match.season, 2026);
+  assert.equal(match.round, "Round 3");
+  assert.equal(normalizeFixture(raw).venue, null);
+  assert.equal(normalizeFixture(raw).homeLogo, null);
+});
 test("missing scores remain unknown, and time alone never implies live", () => {
   const f = normalizeFixture(raw);
   assert.equal(f.score, "— : —");
